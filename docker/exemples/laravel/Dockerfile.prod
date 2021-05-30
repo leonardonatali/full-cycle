@@ -1,0 +1,33 @@
+FROM php:7.4-cli as install
+
+WORKDIR /var/www
+
+# Install and update system dependencies and PHP dependencies
+RUN \
+    apt update && \
+    apt install libzip-dev -y && \
+    docker-php-ext-install zip
+
+# Install composer
+RUN \
+    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
+    php composer-setup.php && \
+    php -r "unlink('composer-setup.php');"
+    
+# Install Laravel
+RUN \
+    php composer.phar create-project laravel/laravel laravel
+
+FROM php:7.4-fpm-alpine
+
+WORKDIR /var/www
+
+RUN rm -rf /var/www/html
+
+COPY --from=install /var/www/laravel . 
+
+RUN chown -R www-data:www-data /var/www 
+
+EXPOSE 9000
+
+CMD [ "php-fpm" ]
