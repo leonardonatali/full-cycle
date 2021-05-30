@@ -28,6 +28,10 @@ COPY --from=install /var/www/laravel .
 
 RUN chown -R www-data:www-data /var/www 
 
+RUN ls -la
+
+RUN ln -s public html
+
 EXPOSE 9000
 
 CMD [ "php-fpm" ]
