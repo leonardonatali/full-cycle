@@ -1,0 +1,43 @@
+version: "3"
+services:
+  db:
+    image: mariadb:10
+    container_name: db
+    tty: true
+    restart: always
+    volumes:
+      - ./database:/var/lib/mysql
+    env_file: ./env
+    networks:
+      - node-app
+
+  nginx:
+    build:
+      context: nginx
+    container_name: nginx
+    depends_on:
+      - node
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - node-app
+
+  node:
+    build:
+      context: node
+    container_name: node
+    depends_on:
+      - db
+    ports:
+      - "80"
+    volumes:
+      - ./node/src:/app
+    entrypoint: "nodemon /app/server.js"
+    env_file: ./env
+    networks:
+      - node-app
+
+networks:
+  node-app:
+    driver: bridge
