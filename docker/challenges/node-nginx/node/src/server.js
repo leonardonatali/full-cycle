@@ -15,9 +15,9 @@ conn.query(sql)
 sql = "SELECT * FROM `people`"
 let peopleList = "";
 conn.query(sql, (err, peoples) => {
-    if(peoples){
+    if (peoples) {
         peoples.forEach((people) => {
-            peopleList = peopleList + 
+            peopleList = peopleList +
             `<strong>ID</strong>: ${people.id}
             <br>
             <strong>Name</strong>: ${people.name}
@@ -35,7 +35,7 @@ const port = process.env.APP_PORT || 80
 app.get('/', (req, res) => {
     // Retrieves all database records
     return res.send(
-        `<h3>Hello, Fullcycle</h3>
+        `<h1>Full Cycle Rocks!</h1>
         <hr>
         People list:<br>
         ${peopleList}`
