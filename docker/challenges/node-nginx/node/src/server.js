@@ -1,45 +1,30 @@
 const express = require("express")
-const conn = require("./database");
-
-// Creates people table if not exists
-let sql = "CREATE TABLE IF NOT EXISTS `people` (`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY, `name` VARCHAR(255))";
-conn.query(sql);
-
-// Creates a random people name
-const name = Math.random().toString(36).substring(7)
-
-// Insert into database
-sql = `INSERT INTO people (name) VALUES('${name}')`;
-conn.query(sql)
-
-sql = "SELECT * FROM `people`"
-let peopleList = "";
-conn.query(sql, (err, peoples) => {
-    if (peoples) {
-        peoples.forEach((people) => {
-            peopleList = peopleList +
-            `<strong>ID</strong>: ${people.id}
-            <br>
-            <strong>Name</strong>: ${people.name}
-            <br>
-            <br>
-            `
-        })
-    }
-})
-conn.end()
+const { people } = require("./people")
 
 const app = express()
 const port = process.env.APP_PORT || 80
 
+people.create()
+
 app.get('/', (req, res) => {
-    // Retrieves all database records
-    return res.send(
-        `<h1>Full Cycle Rocks!</h1>
-        <hr>
-        People list:<br>
-        ${peopleList}`
-    )
+    people.insert()
+
+    people.get()
+        .then((result) => {
+            if (result) {
+                let peopleList = ""
+
+                for (const people of result) {
+                    let id = people.id.toString()
+                    let name = people.name
+                    peopleList += `<strong>ID</strong>: ${id} <br> <strong>Name</strong>: ${name}<br><br>\n`
+                }
+                return res.send(`<h1>Full Cycle Rocks!</h1><hr>People list:<br>${peopleList}`)
+            }
+        }).catch((err) => {
+            console.error('err', err);
+            return res.send(`<h1>Full Cycle Rocks!</h1><hr><h4>An error has occurred</h4>`)
+        })
 })
 
 app.listen(port, () => {
