@@ -1,3 +1,7 @@
+# Export all variables in env file
+include .env
+export $(shell sed 's/=.*//' .env)
+
 default: run
 
 protoc:
