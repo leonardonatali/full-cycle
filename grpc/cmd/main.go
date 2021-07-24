@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/leonardonatali/full-cycle/grpc/config"
-	"github.com/leonardonatali/full-cycle/grpc/pkg/protobuf/server"
+	"github.com/leonardonatali/full-cycle/grpc/pkg/server"
 )
 
 func main() {
