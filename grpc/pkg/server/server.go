@@ -6,6 +6,9 @@ import (
 	"net"
 
 	"github.com/leonardonatali/full-cycle/grpc/config"
+	"github.com/leonardonatali/full-cycle/grpc/pkg/protobuf/users"
+	"github.com/leonardonatali/full-cycle/grpc/pkg/repository/memory"
+	"github.com/leonardonatali/full-cycle/grpc/pkg/services"
 	"google.golang.org/grpc"
 )
 
@@ -26,6 +29,12 @@ func (s *Server) Run() {
 	}
 
 	srv := grpc.NewServer()
+
+	repo := memory.UsersMemoryDB{}
+
+	userService := services.NewUsersService(&repo)
+	users.RegisterUserServiceServer(srv, userService)
+
 	if err := srv.Serve(listener); err != nil {
 		log.Fatalf("could not start gRPC server: %s", err.Error())
 	}
