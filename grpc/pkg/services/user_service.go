@@ -5,15 +5,14 @@ import (
 
 	"github.com/leonardonatali/full-cycle/grpc/pkg/entities"
 	"github.com/leonardonatali/full-cycle/grpc/pkg/protobuf/users"
-	"github.com/leonardonatali/full-cycle/grpc/pkg/repository"
 )
 
 type UserService struct {
 	users.UnimplementedUserServiceServer
-	usersRepo repository.UsersRepository
+	usersRepo entities.UsersRepository
 }
 
-func NewUsersService(usersRepo repository.UsersRepository) *UserService {
+func NewUsersService(usersRepo entities.UsersRepository) *UserService {
 	return &UserService{
 		usersRepo: usersRepo,
 	}
