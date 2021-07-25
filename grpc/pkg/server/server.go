@@ -35,7 +35,12 @@ func (s *Server) Run() {
 	userService := services.NewUsersService(&repo)
 	users.RegisterUserServiceServer(srv, userService)
 
-	if err := srv.Serve(listener); err != nil {
+	errors := make(chan error)
+	log.Printf("The gRPC server is running at port %d", s.cfg.GRPCPort)
+	errors <- srv.Serve(listener)
+
+	select {
+	case err := <-errors:
 		log.Fatalf("could not start gRPC server: %s", err.Error())
 	}
 }
