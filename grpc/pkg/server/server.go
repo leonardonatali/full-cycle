@@ -10,6 +10,7 @@ import (
 	"github.com/leonardonatali/full-cycle/grpc/pkg/repository/memory"
 	"github.com/leonardonatali/full-cycle/grpc/pkg/services"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
@@ -34,6 +35,7 @@ func (s *Server) Run() {
 
 	userService := services.NewUsersService(&repo)
 	users.RegisterUserServiceServer(srv, userService)
+	reflection.Register(srv)
 
 	errors := make(chan error)
 	log.Printf("The gRPC server is running at port %d", s.cfg.GRPCPort)
