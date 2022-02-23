@@ -1,4 +1,4 @@
-# Executar a aplicação
+# Para executar a aplicação
 
 - Garanta que a porta 8080 de sua máquina esteja liberada;
 - Garanta que ambos `docker` e `docker-compose` estejam instalados;
