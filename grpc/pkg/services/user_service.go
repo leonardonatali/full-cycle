@@ -122,3 +122,43 @@ func (s UserService) AddUsers(stream users.UserService_AddUsersServer) error {
 		})
 	}
 }
+
+func (s UserService) AddBidirectionalUsers(stream users.UserService_AddBidirectionalUsersServer) error {
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if err := stream.Send(&users.UserResultStream{Status: "Initializing", User: &users.User{}}); err != nil {
+			return err
+		}
+
+		if err := stream.Send(&users.UserResultStream{Status: "Creating", User: &users.User{}}); err != nil {
+			return err
+		}
+
+		new, err := s.usersRepo.Add(&entities.User{
+			Name:  req.GetName(),
+			Email: req.GetEmail(),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		user := &users.User{
+			Id:    new.ID,
+			Name:  new.Name,
+			Email: new.Email,
+		}
+
+		if err := stream.Send(&users.UserResultStream{Status: "Created", User: user}); err != nil {
+			return err
+		}
+	}
+}

@@ -22,4 +22,5 @@ service UserService {
     rpc Add(User) returns (User);
     rpc AddVerbose(User) returns (stream UserResultStream);
     rpc AddUsers(stream User) returns (Users);
+    rpc AddBidirectionalUsers(stream User) returns (stream UserResultStream);
 }

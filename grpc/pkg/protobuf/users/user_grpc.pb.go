@@ -21,6 +21,7 @@ type UserServiceClient interface {
 	Add(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
 	AddVerbose(ctx context.Context, in *User, opts ...grpc.CallOption) (UserService_AddVerboseClient, error)
 	AddUsers(ctx context.Context, opts ...grpc.CallOption) (UserService_AddUsersClient, error)
+	AddBidirectionalUsers(ctx context.Context, opts ...grpc.CallOption) (UserService_AddBidirectionalUsersClient, error)
 }
 
 type userServiceClient struct {
@@ -106,6 +107,37 @@ func (x *userServiceAddUsersClient) CloseAndRecv() (*Users, error) {
 	return m, nil
 }
 
+func (c *userServiceClient) AddBidirectionalUsers(ctx context.Context, opts ...grpc.CallOption) (UserService_AddBidirectionalUsersClient, error) {
+	stream, err := c.cc.NewStream(ctx, &UserService_ServiceDesc.Streams[2], "/users.UserService/AddBidirectionalUsers", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &userServiceAddBidirectionalUsersClient{stream}
+	return x, nil
+}
+
+type UserService_AddBidirectionalUsersClient interface {
+	Send(*User) error
+	Recv() (*UserResultStream, error)
+	grpc.ClientStream
+}
+
+type userServiceAddBidirectionalUsersClient struct {
+	grpc.ClientStream
+}
+
+func (x *userServiceAddBidirectionalUsersClient) Send(m *User) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *userServiceAddBidirectionalUsersClient) Recv() (*UserResultStream, error) {
+	m := new(UserResultStream)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -113,6 +145,7 @@ type UserServiceServer interface {
 	Add(context.Context, *User) (*User, error)
 	AddVerbose(*User, UserService_AddVerboseServer) error
 	AddUsers(UserService_AddUsersServer) error
+	AddBidirectionalUsers(UserService_AddBidirectionalUsersServer) error
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -128,6 +161,9 @@ func (UnimplementedUserServiceServer) AddVerbose(*User, UserService_AddVerboseSe
 }
 func (UnimplementedUserServiceServer) AddUsers(UserService_AddUsersServer) error {
 	return status.Errorf(codes.Unimplemented, "method AddUsers not implemented")
+}
+func (UnimplementedUserServiceServer) AddBidirectionalUsers(UserService_AddBidirectionalUsersServer) error {
+	return status.Errorf(codes.Unimplemented, "method AddBidirectionalUsers not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -207,6 +243,32 @@ func (x *userServiceAddUsersServer) Recv() (*User, error) {
 	return m, nil
 }
 
+func _UserService_AddBidirectionalUsers_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(UserServiceServer).AddBidirectionalUsers(&userServiceAddBidirectionalUsersServer{stream})
+}
+
+type UserService_AddBidirectionalUsersServer interface {
+	Send(*UserResultStream) error
+	Recv() (*User, error)
+	grpc.ServerStream
+}
+
+type userServiceAddBidirectionalUsersServer struct {
+	grpc.ServerStream
+}
+
+func (x *userServiceAddBidirectionalUsersServer) Send(m *UserResultStream) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *userServiceAddBidirectionalUsersServer) Recv() (*User, error) {
+	m := new(User)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +290,12 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "AddUsers",
 			Handler:       _UserService_AddUsers_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "AddBidirectionalUsers",
+			Handler:       _UserService_AddBidirectionalUsers_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},
