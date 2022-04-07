@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"io"
+	"log"
 	"time"
 
 	"github.com/leonardonatali/full-cycle/grpc/pkg/entities"
@@ -85,4 +87,38 @@ func (s UserService) AddVerbose(req *users.User, stream users.UserService_AddVer
 	}
 
 	return nil
+}
+
+func (s UserService) AddUsers(stream users.UserService_AddUsersServer) error {
+	results := &users.Users{}
+
+	for {
+		received, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(results)
+		}
+		if err != nil {
+			return err
+		}
+
+		log.Printf("New user received: %s", received.GetName())
+
+		new, err := s.usersRepo.Add(&entities.User{
+			Name: received.GetName(),
+			ID:   received.GetEmail(),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		log.Printf("New user Name: %s\n", new.Name)
+		log.Printf("New user ID: %s\n", new.ID)
+
+		results.Users = append(results.Users, &users.User{
+			Id:    new.ID,
+			Name:  new.Name,
+			Email: new.Email,
+		})
+	}
 }
