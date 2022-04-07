@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	Add(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
+	AddVerbose(ctx context.Context, in *User, opts ...grpc.CallOption) (UserService_AddVerboseClient, error)
 }
 
 type userServiceClient struct {
@@ -38,11 +39,44 @@ func (c *userServiceClient) Add(ctx context.Context, in *User, opts ...grpc.Call
 	return out, nil
 }
 
+func (c *userServiceClient) AddVerbose(ctx context.Context, in *User, opts ...grpc.CallOption) (UserService_AddVerboseClient, error) {
+	stream, err := c.cc.NewStream(ctx, &UserService_ServiceDesc.Streams[0], "/users.UserService/AddVerbose", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &userServiceAddVerboseClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type UserService_AddVerboseClient interface {
+	Recv() (*UserResultStream, error)
+	grpc.ClientStream
+}
+
+type userServiceAddVerboseClient struct {
+	grpc.ClientStream
+}
+
+func (x *userServiceAddVerboseClient) Recv() (*UserResultStream, error) {
+	m := new(UserResultStream)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
 	Add(context.Context, *User) (*User, error)
+	AddVerbose(*User, UserService_AddVerboseServer) error
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -52,6 +86,9 @@ type UnimplementedUserServiceServer struct {
 
 func (UnimplementedUserServiceServer) Add(context.Context, *User) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Add not implemented")
+}
+func (UnimplementedUserServiceServer) AddVerbose(*User, UserService_AddVerboseServer) error {
+	return status.Errorf(codes.Unimplemented, "method AddVerbose not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -84,6 +121,27 @@ func _UserService_Add_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_AddVerbose_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(User)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(UserServiceServer).AddVerbose(m, &userServiceAddVerboseServer{stream})
+}
+
+type UserService_AddVerboseServer interface {
+	Send(*UserResultStream) error
+	grpc.ServerStream
+}
+
+type userServiceAddVerboseServer struct {
+	grpc.ServerStream
+}
+
+func (x *userServiceAddVerboseServer) Send(m *UserResultStream) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -96,6 +154,12 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_Add_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AddVerbose",
+			Handler:       _UserService_AddVerbose_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "user.proto",
 }
